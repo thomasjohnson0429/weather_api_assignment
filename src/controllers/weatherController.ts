@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { WeatherService } from "../services/weatherService";
 import { WeatherRequest } from "../types/weather";
+import { AlertService } from "../services/alertService";
 
 export class WeatherController {
   public static async getWeather(
@@ -17,12 +18,35 @@ export class WeatherController {
           .json({ error: "Latitude and longitude are required" });
       }
 
+      // Validate coordinate format
+      const latitude = Number(lat);
+      const longitude = Number(lon);
+
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res
+          .status(400)
+          .json({ error: "Invalid coordinates: must be numbers" });
+      }
+
+      // Get weather data
       const weatherData = await WeatherService.getWeather({
-        lat: Number(lat),
-        lon: Number(lon),
+        lat: latitude,
+        lon: longitude,
       });
 
-      res.json(weatherData);
+      // Get alerts for location
+      const currentTime = Math.floor(Date.now() / 1000);
+      const alerts = await AlertService.getAlertsForLocation(
+        latitude,
+        longitude,
+        currentTime
+      );
+
+      // Combine weather data with alerts
+      res.json({
+        ...weatherData,
+        alerts,
+      });
     } catch (error) {
       console.error("Error fetching weather:", error);
       res.status(500).json({

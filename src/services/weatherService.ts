@@ -50,10 +50,52 @@ export class WeatherService {
     };
   }
 
+  private static validateWeatherData(data: any): void {
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid weather data received");
+    }
+
+    if (!data.name || typeof data.name !== "string") {
+      throw new Error("Invalid weather data received");
+    }
+
+    if (
+      !data.weather ||
+      !Array.isArray(data.weather) ||
+      data.weather.length === 0
+    ) {
+      throw new Error("Invalid weather data received");
+    }
+
+    if (
+      !data.weather[0].description ||
+      typeof data.weather[0].description !== "string"
+    ) {
+      throw new Error("Invalid weather data received");
+    }
+
+    if (!data.main || typeof data.main !== "object") {
+      throw new Error("Invalid weather data received");
+    }
+
+    if (typeof data.main.temp !== "number" || isNaN(data.main.temp)) {
+      throw new Error("Invalid weather data received");
+    }
+
+    if (
+      typeof data.main.feels_like !== "number" ||
+      isNaN(data.main.feels_like)
+    ) {
+      throw new Error("Invalid weather data received");
+    }
+  }
+
   public static async getWeather(
     params: WeatherRequest
   ): Promise<ProcessedWeatherData> {
     const weatherData = await this.fetchWeatherData(params);
+    this.validateWeatherData(weatherData);
+
     const currentTime = Math.floor(Date.now() / 1000);
     const alerts = await AlertService.getAlertsForLocation(
       params.lat,
