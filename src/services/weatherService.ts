@@ -6,8 +6,14 @@ import {
 import { AlertService } from "./alertService";
 import { Alert } from "../types/alert";
 
-const API_KEY = "8da5a56a109e90d6f22e0f29cc8f15d3";
-const BASE_URL = "https://api.openweathermap.org/data/2.5";
+const API_KEY = process.env.OPENWEATHER_API_KEY;
+const BASE_URL = process.env.OPENWEATHER_BASE_URL;
+
+if (!API_KEY || !BASE_URL) {
+  throw new Error(
+    "Missing OpenWeather API key or base URL in environment variables."
+  );
+}
 
 export class WeatherService {
   private static async fetchWeatherData(params: WeatherRequest): Promise<any> {

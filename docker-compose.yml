@@ -9,6 +9,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - NODE_ENV=development
       - PORT=3000
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+      - OPENWEATHER_BASE_URL=${OPENWEATHER_BASE_URL}
     depends_on:
       - redis
     volumes:

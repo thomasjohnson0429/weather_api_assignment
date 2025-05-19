@@ -19,7 +19,11 @@ npm install
 ```
 PORT=3000
 REDIS_URL=redis://localhost:6379
+OPENWEATHER_API_KEY=your_api_key_here
+OPENWEATHER_BASE_URL=https://api.openweathermap.org/data/2.5
 ```
+
+> **Note**: You'll need to sign up for a free API key at [OpenWeather](https://openweathermap.org/api) to get your `OPENWEATHER_API_KEY`.
 
 ## Development
 
