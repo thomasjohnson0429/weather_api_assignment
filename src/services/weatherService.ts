@@ -1,4 +1,10 @@
-import { WeatherRequest, ProcessedWeatherData } from "../types/weather";
+import {
+  WeatherRequest,
+  ProcessedWeatherData,
+  WeatherAlert,
+} from "../types/weather";
+import { AlertService } from "./alertService";
+import { Alert } from "../types/alert";
 
 const API_KEY = "8da5a56a109e90d6f22e0f29cc8f15d3";
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
@@ -33,10 +39,27 @@ export class WeatherService {
     return "moderate";
   }
 
+  private static transformAlertToWeatherAlert(alert: Alert): WeatherAlert {
+    return {
+      sender_name: alert.sender,
+      event: alert.description[0]?.event || "",
+      start: alert.start,
+      end: alert.end,
+      description: alert.description[0]?.description || "",
+      tags: alert.categories,
+    };
+  }
+
   public static async getWeather(
     params: WeatherRequest
   ): Promise<ProcessedWeatherData> {
     const weatherData = await this.fetchWeatherData(params);
+    const currentTime = Math.floor(Date.now() / 1000);
+    const alerts = await AlertService.getAlertsForLocation(
+      params.lat,
+      params.lon,
+      currentTime
+    );
 
     const processedData: ProcessedWeatherData = {
       location: weatherData.name,
@@ -46,7 +69,10 @@ export class WeatherService {
         feelsLike: Math.round(weatherData.main.feels_like),
         type: this.determineTemperatureType(weatherData.main.temp),
       },
-      alerts: null, // Current weather endpoint doesn't provide alerts
+      alerts:
+        alerts.length > 0
+          ? alerts.map(this.transformAlertToWeatherAlert)
+          : null,
     };
 
     return processedData;

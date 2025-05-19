@@ -1,21 +1,15 @@
 import express from "express";
-import { createClient } from "redis";
 import cors from "cors";
 import dotenv from "dotenv";
 import { WeatherController } from "./controllers/weatherController";
+import { AlertController } from "./controllers/alertController";
+import { AlertService } from "./services/alertService";
+import { initializeRedis } from "./services/redisClient";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Redis client setup
-const redisClient = createClient({
-  url: process.env.REDIS_URL,
-});
-
-redisClient.on("error", (err) => console.log("Redis Client Error", err));
-redisClient.on("connect", () => console.log("Connected to Redis"));
 
 // Middleware
 app.use(cors());
@@ -23,22 +17,25 @@ app.use(express.json());
 
 // Routes
 app.get("/", async (req, res) => {
-  try {
-    await redisClient.set("test", "Hello from Redis!");
-    const value = await redisClient.get("test");
-    res.json({ message: "Welcome to the API", redisValue: value });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+  res.json({ message: "Welcome to the API" });
 });
 
 // Weather endpoint
 app.get("/weather", WeatherController.getWeather);
 
+// Alert endpoint
+app.post("/alerts", AlertController.createAlert);
+
 // Start server
 const startServer = async () => {
   try {
-    await redisClient.connect();
+    // Initialize Redis first
+    await initializeRedis();
+
+    // Initialize AlertService
+    await AlertService.initialize();
+
+    // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
     });
